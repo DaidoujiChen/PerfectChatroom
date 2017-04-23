@@ -1,0 +1,70 @@
+<html>
+<title>Chat Room</title>
+<head>
+  <script src='https://unpkg.com/vue/dist/vue.js'></script>
+  <script src='https://cdn.jsdelivr.net/vue.resource/1.0.3/vue-resource.min.js'></script>
+  <script type="text/javascript">
+  </script>
+</head>
+<body>
+  <div id="app">
+    <textarea v-model='messages' id='messageTextarea' style='width: 100%; height: 50%; resize: none; margin-bottom: 10px;' readonly></textarea>
+    Your ID <input v-model='id' placeholder='Your ID' style='width: 100px; margin-bottom: 10px;' readonly><br>
+    Send Message <input v-on:keyup.enter='sendMessage' v-model='message' placeholder='Input Message' style='width: 60%;'>
+  </div>
+</body>
+<script>
+// vue
+const app = new Vue({
+  el: '#app',
+
+  data: {
+    message: '',
+    id: '',
+    connection: null,
+    messages: ''
+  },
+
+  created: function () {
+    this.id = this.idMaker();
+
+    this.connection = new WebSocket('ws://54.250.180.182/websocket', ['o3o']);
+
+    this.connection.onopen = () => {
+      console.log('Connect To Server');
+      this.connection.send(`${this.id}`);
+    };
+
+    this.connection.onerror = error => {
+      console.log('WebSocket Error ' + JSON.stringify(error));
+    };
+
+    this.connection.onmessage = e => {
+      this.messages += `${e.data}\n`
+      const textarea = document.getElementById('messageTextarea');
+      textarea.scrollTop = textarea.scrollHeight;
+    };
+  },
+
+  methods: {
+
+    sendMessage: function() {
+      this.connection.send(`${this.id} : ${this.message}`);
+      this.message = '';
+    },
+
+    idMaker: function() {
+      let text = "";
+      const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for (let i = 0; i < 10; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+      return text;
+    }
+
+  }
+
+})
+</script>
+</html>
